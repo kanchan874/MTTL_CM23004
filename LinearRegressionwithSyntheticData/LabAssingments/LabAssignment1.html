@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Console Controlled Regression</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+</head>
+<body>
+  <h3>Lab 1: Actual vs Predicted (Console Controlled)</h3>
+  <canvas id="graph" width="500" height="400"></canvas>
+
+  <script>
+    let model;
+    let xsTensor, ysTensor;
+
+    function createModel() {
+      model = tf.sequential();
+      model.add(tf.layers.dense({ units: 1, inputShape: [1] }));
+      model.compile({
+        optimizer: tf.train.sgd(0.01),
+        loss: 'meanSquaredError'
+      });
+    }
+
+    async function trainAndPlot(xs, ys) {
+      xsTensor = tf.tensor1d(xs);
+      ysTensor = tf.tensor1d(ys);
+
+      createModel();
+      await model.fit(xsTensor, ysTensor, { epochs: 200 });
+
+      const preds = model.predict(xsTensor);
+      plot(xs, ys, preds.arraySync());
+    }
+
+    function plot(x, actual, predicted) {
+      const ctx = document.getElementById("graph").getContext("2d");
+      ctx.clearRect(0, 0, 500, 400);
+
+      actual.forEach((y, i) => {
+        ctx.fillStyle = "blue";
+        ctx.fillRect(x[i]*60, 400-y*30, 6, 6);
+      });
+
+      predicted.forEach((y, i) => {
+        ctx.fillStyle = "red";
+        ctx.fillRect(x[i]*60, 400-y[0]*30, 6, 6);
+      });
+    }
+
+    // 👉 CALL THIS FROM CONSOLE
+    function updateData(xs, ys) {
+      trainAndPlot(xs, ys);
+    }
+
+    console.log("Use: updateData([1,2,3], [2,4,6])");
+  </script>
+</body>
+</html>
