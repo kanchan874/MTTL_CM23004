@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Digit Recognition</title>
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #121212;
+        font-family: Arial, sans-serif;
+        color: white;
+    }
+
+    .container {
+        background: #1e1e1e;
+        padding: 25px 30px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        width: 320px;
+    }
+
+    h3 {
+        margin-bottom: 15px;
+        font-weight: normal;
+    }
+
+    canvas {
+        border: 2px solid #ffffff;
+        background: black;
+        border-radius: 6px;
+        cursor: crosshair;
+        margin-bottom: 15px;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        background: #3b82f6;
+        color: white;
+    }
+
+    button:hover {
+        background: #2563eb;
+    }
+
+    #prediction-text {
+        margin-top: 10px;
+        font-size: 20px;
+        color: #22c55e;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h3>Draw a Digit (0–9)</h3>
+
+    <canvas id="canvas" width="140" height="140"></canvas>
+
+    <div class="buttons">
+        <button onclick="clearCanvas()">Clear</button>
+        <button onclick="predictDigit()">Classify</button>
+    </div>
+
+    <h2 id="prediction-text">Prediction: -</h2>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    canvas.addEventListener("mousedown", () => drawing = true);
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mouseleave", () => drawing = false);
+
+    canvas.addEventListener("mousemove", (e) => {
+        if (!drawing) return;
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(e.offsetX, e.offsetY, 7, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    function clearCanvas() {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        document.getElementById("prediction-text").innerText = "Prediction: -";
+    }
+
+    function predictDigit() {
+        // Placeholder (mock prediction)
+        const randomDigit = Math.floor(Math.random() * 10);
+        document.getElementById("prediction-text").innerText =
+            "Prediction: " + randomDigit;
+    }
+</script>
+
+</body>
+</html>
