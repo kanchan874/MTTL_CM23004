@@ -1,90 +1,108 @@
+let positiveWords = {};
+let negativeWords = {};
+let totalPos = 0;
+let totalNeg = 0;
 let chart;
 
-// Simple keyword-based probability model
-function analyzeText(text) {
+// Load dataset automatically
+fetch('data.txt')
+    .then(response => response.text())
+    .then(data => trainModel(data));
 
-    text = text.toLowerCase();
+function trainModel(data) {
 
-    let positiveWords = ["love", "amazing", "good", "great", "excellent"];
-    let negativeWords = ["hate", "worst", "bad", "terrible"];
-    let neutralWords = ["okay", "fine", "average"];
+    let lines = data.split("\n");
 
-    let posScore = 0;
-    let negScore = 0;
-    let neuScore = 0;
+    lines.forEach(line => {
 
-    positiveWords.forEach(word => {
-        if (text.includes(word)) posScore++;
+        let parts = line.split(",");
+        if (parts.length < 2) return;
+
+        let label = parts[0].trim().toLowerCase();
+        let text = parts[1].toLowerCase();
+
+        let words = text.split(" ");
+
+        words.forEach(word => {
+
+            word = word.replace(/[^a-z]/g, "");
+
+            if (!word) return;
+
+            if (label === "positive") {
+                positiveWords[word] = (positiveWords[word] || 0) + 1;
+                totalPos++;
+            } 
+            else if (label === "negative") {
+                negativeWords[word] = (negativeWords[word] || 0) + 1;
+                totalNeg++;
+            }
+        });
     });
 
-    negativeWords.forEach(word => {
-        if (text.includes(word)) negScore++;
-    });
-
-    neutralWords.forEach(word => {
-        if (text.includes(word)) neuScore++;
-    });
-
-    let total = posScore + negScore + neuScore;
-
-    if (total === 0) {
-        posScore = negScore = neuScore = 1;
-        total = 3;
-    }
-
-    return {
-        positive: (posScore / total * 100).toFixed(2),
-        negative: (negScore / total * 100).toFixed(2),
-        neutral: (neuScore / total * 100).toFixed(2)
-    };
+    document.getElementById("status").innerText =
+        "Model trained successfully from dataset ✅";
 }
 
 function predict() {
 
-    let text = document.getElementById("inputText").value;
+    let text = document.getElementById("inputText").value.toLowerCase();
+    if (!text.trim()) return alert("Enter sentence first.");
 
-    if (!text.trim()) {
-        alert("Please enter a sentence.");
-        return;
+    let words = text.split(" ");
+
+    let posScore = 0;
+    let negScore = 0;
+
+    words.forEach(word => {
+
+        word = word.replace(/[^a-z]/g, "");
+
+        if (positiveWords[word])
+            posScore += positiveWords[word] / totalPos;
+
+        if (negativeWords[word])
+            negScore += negativeWords[word] / totalNeg;
+    });
+
+    if (posScore === 0 && negScore === 0) {
+        posScore = negScore = 0.5;
     }
 
-    let probs = analyzeText(text);
+    let total = posScore + negScore;
 
-    let maxLabel = Object.keys(probs).reduce((a, b) =>
-        probs[a] > probs[b] ? a : b
-    );
+    let posProb = (posScore / total * 100).toFixed(2);
+    let negProb = (negScore / total * 100).toFixed(2);
+
+    let result = posProb > negProb ? "POSITIVE 😊" : "NEGATIVE 😞";
 
     document.getElementById("predictionResult").innerText =
-        "Prediction: " + maxLabel.toUpperCase();
+        "Prediction: " + result;
 
-    updateChart(probs);
+    updateChart(posProb, negProb);
 }
 
-function updateChart(probs) {
+function updateChart(pos, neg) {
 
     let ctx = document.getElementById('probChart').getContext('2d');
 
-    if (chart) {
-        chart.destroy();
-    }
+    if (chart) chart.destroy();
 
     chart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Positive', 'Negative', 'Neutral'],
+            labels: ['Positive', 'Negative'],
             datasets: [{
-                label: 'Prediction Probability (%)',
-                data: [
-                    probs.positive,
-                    probs.negative,
-                    probs.neutral
+                label: 'Probability (%)',
+                data: [pos, neg],
+                backgroundColor: [
+                    '#00c853',
+                    '#d50000'
                 ]
             }]
         },
         options: {
-            animation: {
-                duration: 500
-            },
+            animation: { duration: 800 },
             scales: {
                 y: {
                     beginAtZero: true,
