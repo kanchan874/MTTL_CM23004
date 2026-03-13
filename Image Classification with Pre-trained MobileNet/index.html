@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Classification - Student Practical</title>
+
+    <!-- Link to basic CSS styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Step 1: Include TensorFlow.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+
+    <!-- Step 2: Include the pre-trained MobileNet model from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@latest"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Practical Heading -->
+        <header>
+            <h1>Practical: Image Classification</h1>
+            <h3>Using Pre-trained MobileNet in Browser</h3>
+            <p><strong>Kanchan Gaikwad / USN No:CM23004</strong> </p>
+        </header>
+        <!-- Main Workspace -->
+        <main class="workspace">
+
+            <div class="control-panel">
+                <h4>1. Upload an Image to Test</h4>
+                <input type="file" id="image-upload" accept="image/*">
+
+                <h4>2. Select Pre-trained Model</h4>
+                <select id="model-select">
+                    <option value="MobileNet">MobileNet (Fast, Lightweight)</option>
+                    <option value="ResNet50">ResNet50 (Simulated for Comparison)</option>
+                </select>
+
+                <h4>3. Analyze</h4>
+                <!-- Button is disabled until model loads -->
+                <button id="classify-btn" onclick="classifyImage()" disabled>Classify Image</button>
+            </div>
+
+            <div class="image-panel">
+                <h4>Image Preview:</h4>
+                <div class="preview-box">
+                    <img id="image-display" src="" alt="Awaiting upload..." style="display: none;">
+                </div>
+            </div>
+
+            <div class="results-panel">
+                <h4>Status:</h4>
+                <p id="status" class="status-msg">Loading TensorFlow.js and MobileNet model...</p>
+
+                <h4>Top 3 Predictions:</h4>
+                <ul id="predictions-list">
+                    <li>Upload an image and run classification.</li>
+                </ul>
+            </div>
+
+        </main>
+
+        <footer>
+            <p><strong>Note:</strong>Pracical Completed</p>
+        </footer>
+    </div>
+
+    <!-- Step 3: Link to our custom JavaScript logic -->
+    <script src="script.js"></script>
+</body>
+
+</html>
