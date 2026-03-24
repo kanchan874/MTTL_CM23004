@@ -1,81 +1,685 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pose Detection and Exercise Repetition Counter</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoseDetect- Posture Analysis System</title>
 
-    <!-- TensorFlow.js and PoseNet loaded via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --accent: #ec4899;
+  --accent-light: #f472b6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --bg-dark: #0f172a;
+  --bg-darker: #020617;
+  --bg-card: #1e293b;
+  --bg-card-light: #334155;
+  --border: #475569;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(71, 85, 105, 0.2);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.logo-text h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.logo-text p {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.student-info {
+  text-align: right;
+}
+
+.student-info h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-light);
+}
+
+.student-info p {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* Main Container */
+.container {
+  display: flex;
+  flex: 1;
+  gap: 2rem;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+/* Left Panel */
+.panel-left {
+  width: 340px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.panel-left::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel-left::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel-left::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* Section Title */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+
+/* Upload Area */
+.upload-wrapper {
+  position: relative;
+}
+
+.upload-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.upload-button {
+  width: 100%;
+  padding: 3rem 1rem;
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.upload-button:hover {
+  border-color: var(--primary-light);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.upload-icon {
+  font-size: 28px;
+}
+
+.upload-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+  flex-direction: column;
+}
+
+.btn {
+  padding: 0.875rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary-light);
+  border: 1px solid var(--primary);
+}
+
+.btn-secondary:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Prediction Result */
+.result-box {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid var(--primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.result-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.result-value {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.result-confidence {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 0.75rem;
+}
+
+/* Confidence Bars */
+.confidence-section {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.confidence-row {
+  margin-bottom: 1.25rem;
+}
+
+.confidence-row:last-child {
+  margin-bottom: 0;
+}
+
+.confidence-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 13px;
+}
+
+.confidence-label-left {
+  font-weight: 500;
+}
+
+.confidence-label-right {
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-card-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+.standing-fill {
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+
+.sitting-fill {
+  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
+}
+
+/* Right Panel - Canvas */
+.panel-right {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 500px;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  background: var(--bg-darker);
+}
+
+video {
+  display: none;
+}
+
+.placeholder {
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.placeholder-icon {
+  font-size: 64px;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.placeholder-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-box {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .panel-left {
+    width: 100%;
+    max-height: 300px;
+  }
+
+  .panel-right {
+    flex: 1;
+    min-height: 400px;
+  }
+}
+</style>
 </head>
 
 <body>
 
-    <header>
-        <h1>Pose Detection and Exercise Repetition Counter using PoseNet</h1>
-        <div class="student-info">
-            <p><strong>Name:</strong> Kanchan Gaikwad</p>
-            <p><strong>USN NO.:</strong> CM23004</p>
+<div class="header">
+  <div class="logo-section">
+    <div class="logo-icon">🚶</div>
+    <div class="logo-text">
+      <h1>PoseDetect Pro</h1>
+      <p>AI-Powered Posture Analysis</p>
+    </div>
+  </div>
+  <div class="student-info">
+    <h2>Kanchan Gaikwad</h2>
+    <p>USN: CM23004</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="panel-left">
+
+    <!-- Upload Section -->
+    <div>
+      <h3 class="section-title">📁 Upload Image</h3>
+      <div class="upload-wrapper">
+        <input type="file" id="upload" accept="image/*" class="upload-input">
+        <div class="upload-button">
+          <span class="upload-icon">📸</span>
+          <span class="upload-text">Click to upload or drag image here</span>
         </div>
-    </header>
-
-    <div class="container">
-
-        <div class="controls">
-            <div>
-                <strong>Status:</strong> <span id="status">Waiting for initialization...</span>
-            </div>
-            <div>
-                <button id="toggle-mode" class="btn">Switch to Multi Pose</button>
-            </div>
-        </div>
-
-        <div class="dashboard logic-dashboard">
-            <div class="card rep-card">
-                <h3>Repetition Count</h3>
-                <div class="value highlight-text" id="rep-val">0</div>
-            </div>
-            <div class="card state-card posture-correct" id="state-card">
-                <h3>Current Posture</h3>
-                <div class="value state-text" id="state-val">UP</div>
-            </div>
-            <div class="card">
-                <h3>Knee Angle</h3>
-                <div class="value" id="angle-val">0°</div>
-            </div>
-        </div>
-
-        <div class="dashboard">
-            <div class="card">
-                <h3>Mode</h3>
-                <div class="value" id="current-mode">Single Pose</div>
-            </div>
-            <div class="card">
-                <h3>FPS</h3>
-                <div class="value" id="fps-val">0</div>
-            </div>
-            <div class="card">
-                <h3>Accuracy (Avg Conf)</h3>
-                <div class="value" id="conf-val">0.00</div>
-            </div>
-        </div>
-
-        <div class="video-container">
-            <!-- Hidden video element for webcam feed -->
-            <video id="video" width="640" height="480" playsinline autoplay></video>
-            <!-- Canvas overlay for drawing the webcam feed and skeleton -->
-            <canvas id="output"></canvas>
-        </div>
-
+      </div>
     </div>
 
-    <!-- Main Logic Script (No frameworks, Native JS) -->
-    <script src="script.js"></script>
+    <!-- Actions -->
+    <div>
+      <h3 class="section-title">⚙️ Actions</h3>
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="predictImage()">🔍 Analyze Image</button>
+        <button class="btn btn-secondary" onclick="startWebcam()">📹 Start Webcam</button>
+      </div>
+    </div>
+
+    <!-- Prediction Result -->
+    <div id="predictionContainer" style="display: none;">
+      <h3 class="section-title">📊 Result</h3>
+      <div class="result-box">
+        <div class="result-label">Current Posture</div>
+        <div class="result-value" id="prediction">-</div>
+        <div class="result-confidence" id="confidence">-</div>
+      </div>
+    </div>
+
+    <!-- Confidence Bars -->
+    <div id="confidenceContainer" style="display: none;">
+      <h3 class="section-title">📈 Confidence Score</h3>
+      <div class="confidence-section">
+        <div class="confidence-row">
+          <div class="confidence-label">
+            <span class="confidence-label-left">Standing</span>
+            <span class="confidence-label-right" id="standingPct">0%</span>
+          </div>
+          <div class="confidence-bar">
+            <div id="barStanding" class="confidence-fill standing-fill"></div>
+          </div>
+        </div>
+        <div class="confidence-row">
+          <div class="confidence-label">
+            <span class="confidence-label-left">Sitting</span>
+            <span class="confidence-label-right" id="sittingPct">0%</span>
+          </div>
+          <div class="confidence-bar">
+            <div id="barSitting" class="confidence-fill sitting-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel-right">
+    <div class="canvas-container">
+      <canvas id="canvas"></canvas>
+      <video id="webcam" autoplay playsinline></video>
+      <div class="placeholder" id="placeholder">
+        <div class="placeholder-icon">🎯</div>
+        <div class="placeholder-text">
+          Upload an image or start your webcam<br>to begin pose detection analysis
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+/* ---------- MODEL ---------- */
+
+const URL="./";
+
+let model;
+let image=new Image();
+
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
+
+let video=document.getElementById("webcam");
+
+async function init(){
+
+const modelURL=URL+"model.json";
+const metadataURL=URL+"metadata.json";
+
+model=await tmPose.load(modelURL,metadataURL);
+
+}
+
+init();
+
+/* ---------- IMAGE UPLOAD ---------- */
+
+document.getElementById("upload").addEventListener("change",function(e){
+
+const file=e.target.files[0];
+const reader=new FileReader();
+
+reader.onload=function(event){
+
+video.style.display="none";
+canvas.style.display="block";
+document.getElementById("placeholder").style.display="none";
+
+image.src=event.target.result;
+
+image.onload=function(){
+
+canvas.width=image.width;
+canvas.height=image.height;
+
+ctx.drawImage(image,0,0);
+
+}
+
+}
+
+reader.readAsDataURL(file);
+
+});
+
+async function predictImage(){
+
+if(!image.src){
+alert("Please upload an image first.");
+return;
+}
+
+const {pose,posenetOutput}=await model.estimatePose(image);
+
+const prediction=await model.predict(posenetOutput);
+
+updatePrediction(prediction);
+
+if(pose){
+tmPose.drawKeypoints(pose.keypoints,0.5,ctx);
+tmPose.drawSkeleton(pose.keypoints,0.5,ctx);
+}
+
+}
+
+/* ---------- WEBCAM ---------- */
+
+let webcamRunning=false;
+
+async function startWebcam(){
+
+canvas.style.display="block";
+video.style.display="none";
+document.getElementById("placeholder").style.display="none";
+
+const stream=await navigator.mediaDevices.getUserMedia({
+video:{width:640,height:480}
+});
+
+video.srcObject=stream;
+
+webcamRunning=true;
+
+video.onloadeddata=()=>{
+predictWebcam();
+};
+
+}
+
+async function predictWebcam(){
+
+if(!webcamRunning) return;
+
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
+
+ctx.drawImage(video,0,0,canvas.width,canvas.height);
+
+const {pose,posenetOutput}=await model.estimatePose(canvas);
+
+const prediction=await model.predict(posenetOutput);
+
+updatePrediction(prediction);
+
+if(pose){
+tmPose.drawKeypoints(pose.keypoints,0.5,ctx);
+tmPose.drawSkeleton(pose.keypoints,0.5,ctx);
+}
+
+requestAnimationFrame(predictWebcam);
+
+}
+
+/* ---------- UPDATE UI ---------- */
+
+function updatePrediction(prediction){
+
+let standing=0;
+let sitting=0;
+
+prediction.forEach(p=>{
+
+if(p.className.toLowerCase().includes("standing"))
+standing=p.probability;
+
+if(p.className.toLowerCase().includes("sitting"))
+sitting=p.probability;
+
+});
+
+let label=standing>sitting?"Standing":"Sitting";
+let confidence=Math.max(standing,sitting);
+
+document.getElementById("predictionContainer").style.display="block";
+document.getElementById("confidenceContainer").style.display="block";
+
+document.getElementById("prediction").innerHTML=label;
+document.getElementById("confidence").innerHTML=`${(confidence*100).toFixed(1)}% Confidence`;
+
+document.getElementById("standingPct").innerHTML=(standing*100).toFixed(0)+"%";
+document.getElementById("sittingPct").innerHTML=(sitting*100).toFixed(0)+"%";
+
+document.getElementById("barStanding").style.width=(standing*100)+"%";
+document.getElementById("barSitting").style.width=(sitting*100)+"%";
+
+}
+
+</script>
 
 </body>
-
 </html>

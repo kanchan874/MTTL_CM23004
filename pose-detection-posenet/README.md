@@ -1,32 +1,98 @@
-# Pose Detection and Exercise Repetition Counter using PoseNet (TensorFlow.js)
+# PoseVision — Human Pose Detection
+### MLTL Practical 06 | TensorFlow.js + PoseNet
 
-## Student Information
-- **Name:** Kanchan Gaikwad
-- **USN NO.:** CM23004
+---
 
-## Project Overview
-This practical project demonstrates a native browser implementation of **PoseNet via TensorFlow.js**. It accesses the device webcam to detect, map, and output coordinate skeletons across a subject's body. By translating these points mathematically, it functions as an intelligent gym motion counter to track squat repetitions safely in real-time.
+## 📌 About
+A browser-based human pose detection system built with **PoseNet** via **TensorFlow.js CDN**.
+No installation needed — just open `index.html` in any modern browser.
 
-## System Features and Technical Bounds
-1. **Geometric Calculations**: Finds intersecting angles derived natively via the `Math.atan2` inverse tangent system traversing the mapped points connecting the Hips, Knees, and Ankles. 
-2. **Conditional Exercise Logic**: Registers **DOWN** repetitions effectively when angle drops between `70-100` degrees. Transitions intelligently tracking complete **UP** repetitions returning safely back toward ranges between `160-180` degrees. 
-3. **Safety Monitoring (Color Detection)**: Calculates depth positioning. Dipping below safe `70°` bounding limits issues structural warnings switching interface displays and skeleton mappings visually to `<red> / INCORRECT`. Retaining healthy angles preserves logic states natively displayed in positive `<green>`. 
-4. **Hardware Analytical Modeling**: Includes live functional toggling swapping model implementations allowing analytical testing comparing execution load against **Single Pose Algorithms** vs complex decoded **Multiple Pose algorithms**. Generates outputting data variables indicating `FPS (using performance.now() metrics)` and exact percentage `Confidence Level Scores`. 
-5. **Node Visibility Engine**: Uniquely colors independent connecting nodes (`Keypoints`) from their bridge vectors (`Skeletons`) and dynamically prints live identification confidence probability scores strictly attached along each identified joint. 
+---
 
-## Project Execution Map 
-*Strictly adheres to utilizing lightweight web primitives explicitly.*
+## 🚀 How to Run
+1. Unzip / place all files in one folder
+2. Open `index.html` in Chrome or Firefox
+3. Wait ~5–10 seconds for PoseNet model to load from CDN
+4. Use the sidebar to choose input source and features
 
-### Pre-requisites 
-No CLI dependencies nor package downloads mandated. Fully functional operating strictly via `index.html`. 
+> ⚠️ **For Webcam**: Run via a local server or `file://` may be blocked.
+> Use VS Code Live Server extension, or run: `python -m http.server 8000`
 
-### Stack 
-- `index.html`
-- `style.css` 
-- `script.js` 
-- CDNs used:
-  - `https://cdn.jsdelivr.net/npm/@tensorflow/tfjs`
-  - `https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet`
+---
 
-### Start
-To preview, run by opening `index.html` using a modern HTML5/WebCam supportive browser standard instance explicitly granting video access when requested.
+## 📁 File Structure
+```
+pose-detection/
+├── index.html      — Main UI structure
+├── style.css       — Dark cyber theme styling
+├── script.js       — PoseNet logic + all features
+├── metadata.json   — Labels, thresholds, keypoint info
+├── model.json      — Model structure reference (see below)
+└── README.md       — This file
+```
+
+---
+
+## 🎯 Features
+| Feature | Description |
+|---|---|
+| 🖼 Image Upload | Upload any image, detect pose instantly |
+| 📷 Webcam Live | Real-time skeleton overlay at 15–25 FPS |
+| 🧍 Standing/Sitting | Predicted from hip-knee Y-position ratio |
+| 🏋 Squat Counter | Counts reps via knee angle threshold |
+| 👥 Single vs Multi | Compare both modes side-by-side |
+| 📊 Confidence Bars | Visual bars for Standing vs Sitting |
+| ⚡ FPS Display | Live frames-per-second counter |
+
+---
+
+## 🔬 Detection Logic
+
+### Posture (Standing / Sitting)
+- Get Y-positions of hips and knees from keypoints
+- If `kneeY - hipY < 40px` → knees near hip level → **Sitting**
+- Else → legs extended downward → **Standing**
+
+### Squat Counter
+```
+knee angle = angle(hip → knee → ankle)
+angle < 100° → squatPhase = 'down'
+angle > 160° → squatPhase = 'up' → count++
+```
+
+### Skeleton Drawing
+- 16 bone connections drawn as cyan gradient lines
+- Keypoints colored: 🟢 Green (>70%), 🟡 Yellow (>50%), 🔴 Pink (<50%)
+- Glow shadows for neon effect
+
+---
+
+## ⚙️ Model Configuration
+PoseNet loads with these settings for laptop performance:
+```js
+{
+  architecture: 'MobileNetV1',
+  outputStride: 16,
+  inputResolution: { width: 320, height: 240 },
+  multiplier: 0.75
+}
+```
+
+---
+
+## 📝 About model.json
+`model.json` is a **reference structure file** — it documents the PoseNet model architecture.
+The actual model weights are loaded from the TensorFlow.js CDN automatically at runtime:
+```
+https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2
+```
+
+---
+
+## 🛠 Tech Stack
+- HTML5 + CSS3 + Vanilla JavaScript
+- TensorFlow.js 3.21.0 (CDN)
+- PoseNet 2.2.2 (CDN)
+- Google Fonts: Orbitron + Rajdhani
+
+
