@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Learning with MobileNet - Lab Practical</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+
+    <!-- Helper Functions (defined FIRST before any modules load) -->
+    <script>
+        window.appHelpers = {
+            addLog(message) {
+                const logDiv = document.getElementById('executionLog');
+                if (logDiv) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry';
+                    entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+                    logDiv.appendChild(entry);
+                    logDiv.scrollTop = logDiv.scrollHeight;
+                }
+                console.log(message);
+            },
+
+            updateStatus(message) {
+                const statusDiv = document.getElementById('statusLog');
+                if (statusDiv) {
+                    statusDiv.textContent = message;
+                }
+            },
+
+            enableButton(buttonId, enabled) {
+                const btn = document.getElementById(buttonId);
+                if (btn) {
+                    btn.disabled = !enabled;
+                }
+            }
+        };
+
+        // Global shortcuts
+        const addLog = (msg) => window.appHelpers.addLog(msg);
+        const updateStatus = (msg) => window.appHelpers.updateStatus(msg);
+        const enableButton = (id, enabled) => window.appHelpers.enableButton(id, enabled);
+    </script>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-content">
+        <h1>🚗 Transfer Learning with MobileNet</h1>
+        <p>Image Classification using Pre-trained Models</p>
+    </div>
+    <div class="student-info">
+        <div><strong>Student:</strong> Kanchan Gaikwad</div>
+        <div><strong>USN:</strong> CM23004</div>
+        <div><strong>Practical:</strong> Lab 8</div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Left Panel: Controls -->
+    <div class="left-panel">
+        <section class="section">
+            <h2>📊 Phase Control</h2>
+            <div class="button-group">
+                <button onclick="initPhase1()" class="btn btn-primary">Phase 1: Load Data (3 Classes)</button>
+                <button onclick="generateDataset('phase1')" class="btn btn-secondary" id="btnGenPhase1">Generate Phase 1 Dataset</button>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🤖 Training</h2>
+            <div class="button-group">
+                <button onclick="trainModel()" class="btn btn-primary" id="btnTrain" disabled>Train Model (Phase 1)</button>
+                <div class="progress-bar" id="progressBar" style="display:none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="info-text" id="trainingStatus"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>📈 Evaluation</h2>
+            <div class="button-group">
+                <button onclick="evaluateModel()" class="btn btn-secondary" id="btnEval" disabled>Evaluate Model</button>
+                <button onclick="showConfusionMatrix()" class="btn btn-secondary" id="btnConfusion" disabled>Show Confusion Matrix</button>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>➕ Incremental Learning</h2>
+            <div class="button-group">
+                <button onclick="addBusClass()" class="btn btn-warning" id="btnAddBus" disabled>Add Bus Class (Phase 2)</button>
+                <button onclick="retrainModel()" class="btn btn-danger" id="btnRetrain" disabled>Retrain Model (Phase 2)</button>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>📊 Results Comparison</h2>
+            <div class="button-group">
+                <button onclick="compareResults()" class="btn btn-info" id="btnCompare" disabled>Compare Phase 1 vs Phase 2</button>
+                <button onclick="predictImage()" class="btn btn-success" id="btnPredict" disabled>Test Prediction</button>
+            </div>
+        </section>
+
+        <section class="section info-box">
+            <h3>Status</h3>
+            <div id="statusLog">Ready to start. Click "Generate Phase 1 Dataset" to begin.</div>
+        </section>
+    </div>
+
+    <!-- Right Panel: Results -->
+    <div class="right-panel">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('accuracy')">Accuracy</button>
+            <button class="tab-btn" onclick="showTab('confusion')">Confusion Matrix</button>
+            <button class="tab-btn" onclick="showTab('comparison')">Comparison</button>
+            <button class="tab-btn" onclick="showTab('prediction')">Prediction</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="accuracy" class="tab-content active">
+            <h3>Model Accuracy Metrics</h3>
+            <canvas id="accuracyChart" style="max-height: 300px;"></canvas>
+            <div id="metricsTable" class="metrics-table"></div>
+        </div>
+
+        <div id="confusion" class="tab-content">
+            <h3>Confusion Matrix</h3>
+            <div id="confusionTable" class="confusion-matrix"></div>
+        </div>
+
+        <div id="comparison" class="tab-content">
+            <h3>Phase 1 vs Phase 2 Comparison</h3>
+            <canvas id="comparisonChart" style="max-height: 300px;"></canvas>
+            <table id="comparisonTable" class="comparison-table"></table>
+        </div>
+
+        <div id="prediction" class="tab-content">
+            <h3>Test Predictions</h3>
+            <div id="predictionResults" class="prediction-results"></div>
+        </div>
+
+        <!-- Log -->
+        <div class="log-section">
+            <h4>Execution Log</h4>
+            <div id="executionLog" class="log-content"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Load modules in correct order -->
+<script src="datasetGenerator.js"></script>
+<script src="model.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
